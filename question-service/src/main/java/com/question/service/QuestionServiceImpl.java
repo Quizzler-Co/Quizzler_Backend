@@ -9,6 +9,7 @@ import com.question.repository.QuestionRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import com.question.dto.QuestionOperationResponseDTO;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,15 +30,21 @@ public class QuestionServiceImpl implements QuestionService {
     private ModelMapper modelMapper;
 
     @Override
-    public String createNewQuestion(QuestionReqDTO questionDTO) {
+    public QuestionOperationResponseDTO createNewQuestion(QuestionReqDTO questionDTO) {
         String quizId=questionDTO.getQuizId();
         String text=questionDTO.getQuestionText();
         if(questionRepository.existsByQuestionTextAndQuizId(text,quizId)){
             throw new ResourceNotFoundException("Question text and quiz id not found");
         }
             Question question = modelMapper.map(questionDTO, Question.class);
-            questionRepository.save(question);
-            return "Successfully added question";
+            Question savedQuestion = questionRepository.save(question);
+            
+            QuestionOperationResponseDTO response = new QuestionOperationResponseDTO();
+            response.setSuccess(true);
+            response.setMessage("Successfully added question");
+            response.setQuestionId(savedQuestion.getId());
+            response.setOperation("created");
+            return response;
     }
 
     @Override
@@ -50,12 +57,17 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public String updateQuestion(String id, QuestionReqDTO questionDTO) {
+    public QuestionOperationResponseDTO updateQuestion(String id, QuestionReqDTO questionDTO) {
         Question q= questionRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("Question not found"));
         modelMapper.map(questionDTO,q);
-        questionRepository.save(q);
+        Question updatedQuestion = questionRepository.save(q);
 
-        return "Question updated successfully";
+        QuestionOperationResponseDTO response = new QuestionOperationResponseDTO();
+        response.setSuccess(true);
+        response.setMessage("Question updated successfully");
+        response.setQuestionId(updatedQuestion.getId());
+        response.setOperation("updated");
+        return response;
     }
 
     @Override

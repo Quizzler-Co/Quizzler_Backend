@@ -1,5 +1,6 @@
 package com.quiz.controller;
 
+import com.quiz.dto.AccessDeniedResponseDTO;
 import com.quiz.dto.QuizCreationRequest;
 import com.quiz.dto.QuizDTO;
 import com.quiz.dto.QuizReqDTO;
@@ -41,7 +42,8 @@ public class QuizController {
             @RequestHeader("x-role") String role) {
 
         if (!"ROLE_ADMIN".equalsIgnoreCase(role)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: Admins only");
+            AccessDeniedResponseDTO response = new AccessDeniedResponseDTO("Access denied: Admins only", "ROLE_ADMIN");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
         DTO.setCreatedByUserId(userId);
@@ -56,7 +58,8 @@ public class QuizController {
             @RequestHeader("x-role") String role) {
 
         if (!"ROLE_ADMIN".equalsIgnoreCase(role)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: Admins only");
+            AccessDeniedResponseDTO response = new AccessDeniedResponseDTO("Access denied: Admins only", "ROLE_ADMIN");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
         request.setCreatedByUserId(userId);
@@ -71,7 +74,8 @@ public class QuizController {
             @RequestHeader("x-role") String role) {
 
         if (!"ROLE_ADMIN".equalsIgnoreCase(role)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: Admins only");
+            AccessDeniedResponseDTO response = new AccessDeniedResponseDTO("Access denied: Admins only", "ROLE_ADMIN");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
         quizDTO.setCreatedByUserId(userId);
@@ -86,7 +90,8 @@ public class QuizController {
             @RequestHeader("x-role") String role) {
         System.out.println(" Inside deleteQuiz - userId: " + userId + ", role: " + role);
         if (!"ROLE_ADMIN".equalsIgnoreCase(role)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: Admins only");
+            AccessDeniedResponseDTO response = new AccessDeniedResponseDTO("Access denied: Admins only", "ROLE_ADMIN");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(quizService.deleteQuiz(id, userId));

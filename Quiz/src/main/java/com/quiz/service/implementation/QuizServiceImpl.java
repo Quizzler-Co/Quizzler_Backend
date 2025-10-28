@@ -8,6 +8,8 @@ import com.quiz.custom_exception.ResourceAlreadyExistsException;
 import com.quiz.custom_exception.ResourceNotFoundException;
 import com.quiz.custom_exception.UnauthorizedAccessException;
 import com.quiz.dto.QuizCreationRequest;
+import com.quiz.dto.QuizCreationResponseDTO;
+import com.quiz.dto.QuizOperationResponseDTO;
 import com.quiz.dto.QuizReqDTO;
 import com.quiz.dto.QuizWithQuestionsDTO;
 import com.quiz.service.QuestionClient;
@@ -63,7 +65,7 @@ public class QuizServiceImpl implements QuizService {
     }
 
         @Override
-        public String createQuizWithQuestions(QuizCreationRequest request, String userId) {
+        public QuizCreationResponseDTO createQuizWithQuestions(QuizCreationRequest request, String userId) {
             if (quizRepo.existsByTitle(request.getTitle())) {
                 throw new ResourceAlreadyExistsException("Title Already Exists");
             }
@@ -99,13 +101,18 @@ public class QuizServiceImpl implements QuizService {
             quiz.setQuestionIds(questionIds);
             quizRepo.save(quiz);
 
-                return "Quiz And questions are created successfully with ID: " + quizId;
+            QuizCreationResponseDTO response = new QuizCreationResponseDTO();
+            response.setQuizId(quizId);
+            response.setTitle(quiz.getTitle());
+            response.setMessage("Quiz and questions created successfully");
+            response.setQuestionIds(questionIds);
+            return response;
         }
 
 
     // Deletes a quiz by its ID
     @Override
-    public String deleteQuiz(String id, String userId) {
+    public QuizOperationResponseDTO deleteQuiz(String id, String userId) {
         // Finds the quiz or throws an exception if not found
         Quiz quiz = quizRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
         if (!quiz.getCreatedByUserId().equals(userId)) {
@@ -113,7 +120,13 @@ public class QuizServiceImpl implements QuizService {
         }
         // Deletes the quiz from the database
         quizRepo.delete(quiz);
-        return "Quiz deleted Successfully";
+        
+        QuizOperationResponseDTO response = new QuizOperationResponseDTO();
+        response.setSuccess(true);
+        response.setMessage("Quiz deleted successfully");
+        response.setQuizId(id);
+        response.setOperation("deleted");
+        return response;
     }
 
     // Updates an existing quiz by its ID
@@ -135,14 +148,20 @@ public class QuizServiceImpl implements QuizService {
 
     // Adds a new quiz to the database
     @Override
-    public String addQuiz(QuizReqDTO quizDTO) {
+    public QuizOperationResponseDTO addQuiz(QuizReqDTO quizDTO) {
         // Checks if a quiz with the same title already exists
         if (quizRepo.existsByTitle(quizDTO.getTitle())) {
             throw new ResourceAlreadyExistsException("Title Already Exists");
         }
         // Maps the QuizReqDTO to a Quiz entity and saves it to the database
-        quizRepo.save(mapper.map(quizDTO, Quiz.class));
-        return "Success";
+        Quiz savedQuiz = quizRepo.save(mapper.map(quizDTO, Quiz.class));
+        
+        QuizOperationResponseDTO response = new QuizOperationResponseDTO();
+        response.setSuccess(true);
+        response.setMessage("Quiz created successfully");
+        response.setQuizId(savedQuiz.getId());
+        response.setOperation("created");
+        return response;
     }
     @Override
     public QuizWithQuestionsDTO getQuizWithQuestions(String quizId, boolean isPrivilegedUser) {
