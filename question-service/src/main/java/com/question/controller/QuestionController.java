@@ -1,5 +1,6 @@
 package com.question.controller;
 
+import com.question.dto.AccessDeniedResponseDTO;
 import com.question.dto.QuestionCreateRequest;
 import com.question.dto.QuestionReqDTO;
 import com.question.dto.QuestionDTO;
@@ -22,7 +23,8 @@ public class QuestionController {
     @GetMapping("/all")
     public ResponseEntity<?> getAllQuestion(@RequestHeader(value = "x-role", required = false) String role) {
         if (!"ROLE_ADMIN".equals(role)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: Admin role required");
+            AccessDeniedResponseDTO response = new AccessDeniedResponseDTO("Access Denied: Admin role required", "ROLE_ADMIN");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
         return ResponseEntity.ok(questionService.getAllQuestion());
     }
@@ -32,7 +34,8 @@ public class QuestionController {
     public ResponseEntity<?> addQuestion(@RequestBody QuestionReqDTO questionDTO,
                                          @RequestHeader(value = "x-role", required = false) String role) {
         if (!"ROLE_ADMIN".equals(role)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: Admin role required");
+            AccessDeniedResponseDTO response = new AccessDeniedResponseDTO("Access Denied: Admin role required", "ROLE_ADMIN");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(questionService.createNewQuestion(questionDTO));
     }
@@ -59,7 +62,8 @@ public class QuestionController {
     public ResponseEntity<?> getQuestionById(@PathVariable String id,
                                              @RequestHeader(value = "x-role", required = false) String role) {
         if (!"ROLE_ADMIN".equals(role)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: Admin role required");
+            AccessDeniedResponseDTO response = new AccessDeniedResponseDTO("Access Denied: Admin role required", "ROLE_ADMIN");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
         return ResponseEntity.ok(questionService.getQuestionById(id));
     }
@@ -70,7 +74,8 @@ public class QuestionController {
                                             @RequestBody QuestionReqDTO questionDTO,
                                             @RequestHeader(value = "x-role", required = false) String role) {
         if (!"ROLE_ADMIN".equals(role)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: Admin role required");
+            AccessDeniedResponseDTO response = new AccessDeniedResponseDTO("Access Denied: Admin role required", "ROLE_ADMIN");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
         return ResponseEntity.ok(questionService.updateQuestion(id, questionDTO));
     }
@@ -84,7 +89,8 @@ public class QuestionController {
         boolean isAdmin = "ROLE_ADMIN".equalsIgnoreCase(role);
 
         if (!(isInternal || isAdmin)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied");
+            AccessDeniedResponseDTO response = new AccessDeniedResponseDTO("Access Denied", "ROLE_ADMIN");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
         List<String> questionIds = questionService.createQuestions(requests);

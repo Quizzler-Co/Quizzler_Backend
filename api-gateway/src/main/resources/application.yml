@@ -12,7 +12,7 @@ spring:
       globalcors:
         cors-configurations:
           "[/**]":
-            allowedOrigins: ["http://localhost:5173"]
+            allowedOrigins: ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080", "http://127.0.0.1:3000", "http://127.0.0.1:5173", "http://127.0.0.1:8080"]
             allowedMethods: [GET, POST, PUT, DELETE, OPTIONS, PATCH]
             allowedHeaders: ["*"]
             allowCredentials: true
@@ -75,6 +75,17 @@ spring:
                 name: bugReportService
                 fallbackUri: forward:/fallback/bugreport
 
+        - id: blog-service
+          uri: lb://BLOG-SERVICE
+          predicates:
+            - Path=/api/v1/posts/**,/api/v1/categories/**,/api/v1/tags/**
+          filters:
+            - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: blogService
+                fallbackUri: forward:/fallback/blog
+
         - id: user-auth
           uri: lb://USER-AUTH
           predicates:
@@ -133,6 +144,12 @@ resilience4j:
         permittedNumberOfCallsInHalfOpenState: 2
 
       userAuth:
+        slidingWindowSize: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
+
+      blogService:
         slidingWindowSize: 5
         failureRateThreshold: 50
         waitDurationInOpenState: 10s

@@ -12,11 +12,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
-
+    
     private final AuthService authService;
 
-    @PostMapping("/login")
+    @PostMapping("/login")//POST http://localhost:8086/api/v1/auth/login
     public ResponseEntity<JwtAuthenticationResponse> userLogin(@Valid @RequestBody LoginRequest loginRequest) {
+        System.out.println("[Instance-B] Received login request from user: xyz");
         JwtAuthenticationResponse jwtToken = authService.login(loginRequest);
         return ResponseEntity.ok(jwtToken);
     }
