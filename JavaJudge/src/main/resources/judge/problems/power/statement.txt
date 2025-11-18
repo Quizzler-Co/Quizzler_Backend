@@ -1,0 +1,15 @@
+Power
+
+Given two integers, base and exponent, return base raised to the power of exponent.
+Note: The result may be large, so use long type for the return value.
+
+Example:
+Input: 2, 3
+Output: 8
+
+Input: 5, 4
+Output: 625
+
+Your method signature:
+public static long power(int param1, int param2)
+

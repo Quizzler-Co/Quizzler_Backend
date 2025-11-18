@@ -1,0 +1,5 @@
+{
+  "problemId": "example1",
+  "code": "String[] lines = input.split(\"\\\\r?\\\\n\");\nfor (String line : lines) {\n    line = line.trim();\n    if (line.contains(\" \")) {\n        String[] nums = line.split(\"\\\\s+\");\n        int sum = 0;\n        for (String n : nums) {\n            if (!n.isEmpty()) {\n                sum += Integer.parseInt(n);\n            }\n        }\n        return String.valueOf(sum);\n    }\n}\nreturn \"0\";"
+}
+

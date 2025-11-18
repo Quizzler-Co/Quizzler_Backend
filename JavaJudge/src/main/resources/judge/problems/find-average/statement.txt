@@ -1,0 +1,17 @@
+Find Average
+
+Given an array of integers, return the average as a double.
+
+Example:
+Input: [10, 20, 30]
+Output: 20.0
+
+Input: [5, 15, 25, 35]
+Output: 20.0
+
+Your method signature:
+public static double findAverage(int[] param1)
+
+The input will be provided as space-separated integers in the input file.
+The system automatically parses it into an int[] for you.
+

@@ -1,0 +1,30 @@
+Reverse an Array
+
+Given an array of integers, return the reversed array.
+
+Example:
+Input: [1, 2, 3, 4, 5]
+Output: [5, 4, 3, 2, 1]
+
+Input: [10, 20, 30]
+Output: [30, 20, 10]
+
+Your method signature:
+public static int[] reverseArray(int[] param1)
+
+The input will be provided as space-separated integers in the input file.
+The system automatically parses it into an int[] for you.
+
+You need to:
+1. Reverse the array in-place or create a new reversed array
+2. Return the reversed int[] array
+
+Example solution:
+public static int[] reverseArray(int[] param1) {
+    int[] result = new int[param1.length];
+    for (int i = 0; i < param1.length; i++) {
+        result[i] = param1[param1.length - 1 - i];
+    }
+    return result;
+}
+

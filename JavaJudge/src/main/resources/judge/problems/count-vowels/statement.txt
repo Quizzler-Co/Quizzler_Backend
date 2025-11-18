@@ -1,0 +1,15 @@
+Count Vowels
+
+Given a string, return the count of vowels (a, e, i, o, u) in the string.
+Both uppercase and lowercase vowels should be counted.
+
+Example:
+Input: "hello"
+Output: 2
+
+Input: "Programming"
+Output: 3
+
+Your method signature:
+public static int countVowels(String param1)
+

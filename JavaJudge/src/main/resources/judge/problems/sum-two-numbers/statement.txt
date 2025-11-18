@@ -1,0 +1,14 @@
+Sum Two Numbers
+
+Given two integers, return their sum.
+
+Example:
+Input: 5, 10
+Output: 15
+
+Input: -3, 7
+Output: 4
+
+Your method signature:
+public static int sum(int param1, int param2)
+

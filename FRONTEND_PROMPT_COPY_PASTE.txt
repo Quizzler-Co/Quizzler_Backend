@@ -1,0 +1,89 @@
+Extend the Quizzler quiz system to support coding questions alongside MCQs for technical rounds. The Java Judge service is already integrated in the backend.
+
+BACKEND API (already integrated):
+- Base URL: http://localhost:8086/api/v1/judge
+- GET /api/v1/judge/problems?difficulty=EASY|MEDIUM|HARD - Get all problems
+- GET /api/v1/judge/problems/{problemId} - Get problem details  
+- POST /api/v1/judge/submit - Submit code solution
+  Request: { "problemId": "string", "code": "string" }
+  Response: { "verdict": "ACCEPTED|WRONG_ANSWER|COMPILATION_ERROR|RUNTIME_ERROR|ERROR", "message": "string", "expectedOutput": "string", "actualOutput": "string" }
+
+TYPES TO ADD:
+Extend your existing Question interface:
+- Add: type: 'MCQ' | 'CODING'
+- Add: problemId?: string, methodName?: string, parameterTypes?: string, returnType?: string, inputType?: string, outputType?: string, difficulty?: 'EASY' | 'MEDIUM' | 'HARD'
+
+Add new interfaces:
+interface ProblemDTO { id, title, description, difficulty, inputType, outputType, methodName, parameterTypes, returnType }
+interface SubmissionResponse { verdict, message, expectedOutput?, actualOutput? }
+interface QuizAnswer { questionId, questionType: 'MCQ' | 'CODING', selectedAnswer?, code?, submissionResult? }
+
+SERVICE LAYER:
+Create services/JudgeService.ts following your existing QuizService pattern:
+- Use your existing token retrieval (localStorage/sessionStorage based on rememberMe)
+- Use your existing error handling pattern (401 redirect, 403/404 errors)
+- Methods: getAllProblems(difficulty?), getProblem(problemId), submitCode(problemId, code)
+
+COMPONENTS TO CREATE:
+1. components/CodeEditor.tsx:
+   - Use @monaco-editor/react or @uiw/react-codemirror
+   - Props: question, code, onChange, onSubmit, isSubmitting, submissionResult
+   - Show problem description, method signature
+   - Pre-populate with method template: `public {returnType} {methodName}({parameterTypes} input) { // Your code here return null; }`
+   - Submit button with loading state (use Framer Motion, Lucide React icons)
+   - Display SubmissionResult component below
+
+2. components/SubmissionResult.tsx:
+   - Show verdict badge (ACCEPTED=green, WRONG_ANSWER=orange, errors=red)
+   - Use Lucide icons (CheckCircle2, XCircle, AlertCircle)
+   - Show message
+   - For WRONG_ANSWER: side-by-side expected vs actual output
+   - For errors: show error details
+   - Use Framer Motion animations, Tailwind CSS styling
+
+INTEGRATION POINTS:
+1. Quiz Creation Form (Admin):
+   - Add question type selector: "MCQ" or "Coding Question"
+   - When "Coding Question": show problem selector (fetch from /api/v1/judge/problems), display method signature preview, hide MCQ fields
+   - Save with type: 'CODING' and problemId
+
+2. Quiz Play Interface:
+   - Detect question.type === 'CODING'
+   - For MCQ: show existing MCQ UI
+   - For CODING: render CodeEditor component
+   - Handle code submission: call JudgeService.submitCode(), update answers state with code and submissionResult
+   - Show toast notifications (use existing toast system)
+   - Update question navigator to show coding question status (answered/partially answered/unanswered)
+
+3. Results Screen:
+   - Show coding question results with verdict badges
+   - Display submitted code
+   - Show submission results (ACCEPTED/WRONG_ANSWER/etc.)
+   - Use existing color scheme and Framer Motion
+
+TECH STACK (match existing):
+- React 19 functional components with hooks
+- Tailwind CSS 4 for styling
+- Framer Motion for animations
+- Lucide React for icons
+- Monaco Editor or CodeMirror for code editing
+- Existing toast notification system
+- Existing error handling patterns
+
+INSTALL:
+npm install @monaco-editor/react
+# OR
+npm install @uiw/react-codemirror @codemirror/lang-java
+
+IMPLEMENTATION ORDER:
+1. Create JudgeService.ts (30 min)
+2. Create CodeEditor and SubmissionResult components (2-3 hours)
+3. Extend quiz creation form (1 hour)
+4. Update quiz play interface (1-2 hours)
+5. Update results screen (1 hour)
+6. Testing (1 hour)
+
+Total: 6-7 hours
+
+Follow your existing patterns: service layer, error handling, toast notifications, component structure, styling with Tailwind, animations with Framer Motion.
+

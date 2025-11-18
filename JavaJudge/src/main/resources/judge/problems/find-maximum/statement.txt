@@ -1,0 +1,17 @@
+Find Maximum
+
+Given an array of integers, return the maximum value in the array.
+
+Example:
+Input: [3, 7, 2, 9, 1]
+Output: 9
+
+Input: [-5, -2, -10]
+Output: -2
+
+Your method signature:
+public static int findMax(int[] param1)
+
+The input will be provided as space-separated integers in the input file.
+The system automatically parses it into an int[] for you.
+

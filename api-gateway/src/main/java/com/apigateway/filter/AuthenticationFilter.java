@@ -1,18 +1,17 @@
 package com.apigateway.filter;
 
 import com.apigateway.DTO.UserValidationResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
-import java.util.Map;
+import java.time.Duration;
 
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
@@ -57,8 +56,10 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                                                 Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Authentication service unavailable"))
                                         )
                         )
-
                         .bodyToMono(UserValidationResponse.class)
+                        .timeout(Duration.ofSeconds(60)) // Increased timeout to 60 seconds
+                        .retryWhen(Retry.fixedDelay(2, Duration.ofMillis(1000))) // Retry twice with 1s delay
+                        .doOnError(error -> System.err.println("Error calling auth service: " + error.getMessage()))
                         .flatMap(response -> {
                             // Add headers to forward user info downstream
                             return chain.filter(
@@ -70,6 +71,15 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                                             }))
                                             .build()
                             );
+                        })
+                        .onErrorResume(error -> {
+                            // If auth service fails, return error (don't let it trigger circuit breaker)
+                            System.err.println("Failed to validate token: " + error.getMessage());
+                            System.err.println("Error type: " + error.getClass().getName());
+                            return Mono.error(new ResponseStatusException(
+                                    HttpStatus.SERVICE_UNAVAILABLE,
+                                    "Authentication service unavailable. Please try again."
+                            ));
                         });
 
 

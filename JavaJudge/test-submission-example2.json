@@ -1,0 +1,5 @@
+{
+  "problemId": "example2",
+  "code": "int num = Integer.parseInt(input.trim());\nreturn String.valueOf(num * 2);"
+}
+
