@@ -1,5 +1,6 @@
 server:
   port: 8086
+  address: 0.0.0.0
 
 spring:
   application:
@@ -32,17 +33,10 @@ spring:
       globalcors:
         cors-configurations:
           "[/**]":
-            allowedOrigins: 
-              - "http://localhost:3000"
-              - "http://localhost:5173"
-              - "http://localhost:8080"
-              - "http://127.0.0.1:3000"
-              - "http://127.0.0.1:5173"
-              - "http://127.0.0.1:8080"
-            allowedMethods: [GET, POST, PUT, DELETE, OPTIONS, PATCH]
+            allowedOrigins: "*"
+            allowedMethods: [GET, POST, PUT, DELETE, OPTIONS]
             allowedHeaders: ["*"]
-            allowCredentials: true
-            exposedHeaders: ["Authorization"]
+            allowCredentials: false
             maxAge: 3600
 
       routes:
@@ -127,10 +121,6 @@ spring:
                   maxBackoff: 1000ms
                   factor: 2
                   basedOnPreviousValue: false
-            - name: CircuitBreaker
-              args:
-                name: userAuth
-                fallbackUri: forward:/fallback/user-auth
 
         - id: judge-service
           uri: lb://JAVA-JUDGE
@@ -155,18 +145,18 @@ spring:
   main:
     web-application-type: reactive
 
+# Shorten stale instance eviction time (dev-friendly)
 eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka
-    registry-fetch-interval-seconds: 5
-    instance-info-replication-interval-seconds: 10
-    should-on-demand-update-status-change: true
   instance:
-    lease-renewal-interval-in-seconds: 5
-    lease-expiration-duration-in-seconds: 10
-    instance-id: ${spring.application.name}:${server.port}:${random.value}
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 30
 
 management:
   endpoints:
@@ -227,5 +217,7 @@ resilience4j:
 
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    reactor.netty.http.client: DEBUG
+    org.springframework.cloud.gateway: INFO
+    org.springframework.cloud: INFO
+    com.netflix.discovery: INFO
+

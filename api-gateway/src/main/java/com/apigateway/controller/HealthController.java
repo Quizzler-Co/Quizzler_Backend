@@ -34,6 +34,25 @@ public class HealthController {
                 List<String> services = discoveryClient.getServices();
                 health.put("totalServices", services.size());
                 
+                // Check specifically for USER-AUTH
+                boolean userAuthFound = services.stream()
+                        .anyMatch(s -> s.equalsIgnoreCase("USER-AUTH"));
+                health.put("userAuthRegistered", userAuthFound);
+                
+                if (userAuthFound) {
+                    var instances = discoveryClient.getInstances("USER-AUTH");
+                    health.put("userAuthInstances", instances.size());
+                    if (!instances.isEmpty()) {
+                        var instance = instances.get(0);
+                        health.put("userAuthUri", instance.getUri().toString());
+                        health.put("userAuthHost", instance.getHost());
+                        health.put("userAuthPort", instance.getPort());
+                        health.put("userAuthServiceId", instance.getServiceId());
+                    }
+                } else {
+                    health.put("userAuthError", "USER-AUTH service not found in Eureka");
+                }
+                
                 // Check specifically for JAVA-JUDGE
                 boolean javaJudgeFound = services.stream()
                         .anyMatch(s -> s.equalsIgnoreCase("JAVA-JUDGE"));

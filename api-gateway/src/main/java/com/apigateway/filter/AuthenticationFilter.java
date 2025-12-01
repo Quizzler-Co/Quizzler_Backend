@@ -28,20 +28,31 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
-            System.out.println(" Path: " + exchange.getRequest().getPath());
-            if (validator.isSecured.test(exchange.getRequest())) {
+            System.out.println("========================================");
+            System.out.println("[API-GATEWAY] Request received");
+            System.out.println("[API-GATEWAY] Path: " + exchange.getRequest().getPath());
+            System.out.println("[API-GATEWAY] Method: " + exchange.getRequest().getMethod());
+            System.out.println("[API-GATEWAY] URI: " + exchange.getRequest().getURI());
+            
+            boolean isSecured = validator.isSecured.test(exchange.getRequest());
+            System.out.println("[API-GATEWAY] Is secured route: " + isSecured);
+            
+            if (isSecured) {
+                System.out.println("[API-GATEWAY] Route requires authentication");
                 String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
                 if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                    System.err.println("[API-GATEWAY] ERROR: Authorization header missing or invalid");
                     return Mono.error(new ResponseStatusException(
                             HttpStatus.UNAUTHORIZED,
                             "Authorization header is missing or doesn't start with Bearer"
                     ));
                 }
 
-                System.out.println(" Auth Header: " + authHeader);
+                System.out.println("[API-GATEWAY] Auth Header found: " + authHeader.substring(0, Math.min(20, authHeader.length())) + "...");
                 String token = authHeader.substring(7);
 
+                System.out.println("[API-GATEWAY] Validating token with auth service...");
                 return webClientBuilder.build()
                         .get()
                         .uri("http://USER-AUTH/api/v1/auth/validate?token=" + token)
@@ -50,7 +61,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                                 status -> status.is5xxServerError(),
                                 clientResponse -> clientResponse
                                         .bodyToMono(String.class)
-                                        .doOnNext(errorBody -> System.err.println("Auth service error: " + errorBody))
+                                        .doOnNext(errorBody -> System.err.println("[API-GATEWAY] Auth service error: " + errorBody))
                                         .defaultIfEmpty("Authentication service unavailable")
                                         .flatMap(errorBody ->
                                                 Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Authentication service unavailable"))
@@ -59,8 +70,9 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                         .bodyToMono(UserValidationResponse.class)
                         .timeout(Duration.ofSeconds(60)) // Increased timeout to 60 seconds
                         .retryWhen(Retry.fixedDelay(2, Duration.ofMillis(1000))) // Retry twice with 1s delay
-                        .doOnError(error -> System.err.println("Error calling auth service: " + error.getMessage()))
+                        .doOnError(error -> System.err.println("[API-GATEWAY] Error calling auth service: " + error.getMessage()))
                         .flatMap(response -> {
+                            System.out.println("[API-GATEWAY] Token validated successfully for user: " + response.getEmail());
                             // Add headers to forward user info downstream
                             return chain.filter(
                                     exchange.mutate()
@@ -74,8 +86,8 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                         })
                         .onErrorResume(error -> {
                             // If auth service fails, return error (don't let it trigger circuit breaker)
-                            System.err.println("Failed to validate token: " + error.getMessage());
-                            System.err.println("Error type: " + error.getClass().getName());
+                            System.err.println("[API-GATEWAY] Failed to validate token: " + error.getMessage());
+                            System.err.println("[API-GATEWAY] Error type: " + error.getClass().getName());
                             return Mono.error(new ResponseStatusException(
                                     HttpStatus.SERVICE_UNAVAILABLE,
                                     "Authentication service unavailable. Please try again."
@@ -84,7 +96,8 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
 
             }
-            System.out.println("In GatewayFilter");
+            System.out.println("[API-GATEWAY] Route is public, forwarding request to service...");
+            System.out.println("========================================");
             return chain.filter(exchange);
         };
     }
