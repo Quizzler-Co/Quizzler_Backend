@@ -7,7 +7,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://localhost:27017/quizzler
+      uri: mongodb+srv://quizzler:quizzler123@cluster0.wfbfhkk.mongodb.net/quizzler?retryWrites=true&w=majority
 
   mail:
     host: smtp.gmail.com
@@ -24,7 +24,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://service-registry:8761/eureka
   instance:
     prefer-ip-address: true
     ip-address: 127.0.0.1

@@ -1,0 +1,185 @@
+version: '3.8'
+
+services:
+  # Service Registry (Eureka) - Must start first
+  service-registry:
+    build:
+      context: ./service-registry
+      dockerfile: Dockerfile
+    container_name: service-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - quizzler-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - quizzler-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - quizzler-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # User Auth Service
+  user-auth:
+    build:
+      context: ./user-auth
+      dockerfile: Dockerfile
+    container_name: user-auth
+    ports:
+      - "8098:8098"
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    networks:
+      - quizzler-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    restart: on-failure
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8086:8086"
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      user-auth:
+        condition: service_started
+    networks:
+      - quizzler-network
+    restart: on-failure
+
+  # Quiz Service
+  quiz-service:
+    build:
+      context: ./Quiz
+      dockerfile: Dockerfile
+    container_name: quiz-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    networks:
+      - quizzler-network
+    restart: on-failure
+
+  # Question Service
+  question-service:
+    build:
+      context: ./question-service
+      dockerfile: Dockerfile
+    container_name: question-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    networks:
+      - quizzler-network
+    restart: on-failure
+
+  # Participation Service
+  participation-service:
+    build:
+      context: ./participation-service
+      dockerfile: Dockerfile
+    container_name: participation-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - quizzler-network
+    restart: on-failure
+
+  # Leaderboard Service
+  leaderboard:
+    build:
+      context: ./LeaderBoard
+      dockerfile: Dockerfile
+    container_name: leaderboard
+    ports:
+      - "8084:8084"
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - quizzler-network
+    restart: on-failure
+
+  # Java Judge Service
+  java-judge:
+    build:
+      context: ./JavaJudge
+      dockerfile: Dockerfile
+    container_name: java-judge
+    ports:
+      - "8085:8085"
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    networks:
+      - quizzler-network
+    restart: on-failure
+
+  # Bug Report Service
+  bugreport-service:
+    build:
+      context: ./BugReport-service
+      dockerfile: Dockerfile
+    container_name: bugreport-service
+    ports:
+      - "8088:8088"
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    networks:
+      - quizzler-network
+    restart: on-failure
+
+networks:
+  quizzler-network:
+    driver: bridge
+
