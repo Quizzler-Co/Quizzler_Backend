@@ -178,3 +178,6 @@ For production deployment:
 6. Use external databases instead of containerized ones
 7. Set up monitoring and alerting
 
+
+
+
